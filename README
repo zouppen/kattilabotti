@@ -3,6 +3,27 @@ How to run
 $ cp bot.conf.example bot.conf
 $ emacs bot.conf   # or vim, nano, ...
 
-Set classpath to point the directory where PircBot is in:
+Link (or copy) mysql-connector and pircbot to the directory where
+KattilaBot is in (adapt the following to your directory structure):
 
-$ export CLASSPATH=.:/usr/share/java/mysql-connector-java-5.1.6.jar:~/sorsat/pircbot/pircbot.jar
+$ ln -s /usr/share/java/mysql-connector-java-5.1.6-jar mysql-connect-java.jar
+$ ln -s ~/sorsat/pircbot/pircbot.jar pircbot.jar
+
+Then you can start KattilaBot.
+
+$ ./start.sh
+
+The bot joins to the defined channel and writes its process ID to
+"kattilabot.pid".
+
+Bot doesn't automatically scan the database for changes. It waits for
+SIGUSR2 signal. It's your job to create a hook which sends signal
+either periodically or when there is new data in the database. It
+doesn't break anything if you signal KattilaBot in vain.
+
+You can test the scan by running
+
+$ KILL -USR2 pid_of_kattilabot
+
+My set-up is to run KattilaBot in user www-data and use PHP to send a
+signal to KattilaBot.

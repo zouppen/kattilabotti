@@ -1,5 +1,7 @@
 import java.io.*;
 import java.util.Properties;
+import java.util.Set;
+import java.util.TreeSet;
 import org.jibble.pircbot.*;
 import java.sql.*;
 
@@ -18,7 +20,7 @@ public class KattilaBot extends PircBot {
     private DatabaseTool dbTool = null;
     private PreparedStatement query;
 
-    private ResultSet oldResult = null;
+    private Set<String> oldVisitors = new TreeSet<String>();
     
     public KattilaBot() throws Exception {
 	
@@ -74,37 +76,62 @@ public class KattilaBot extends PircBot {
 	// No errors if this is reached
 	this.reconnectsLeft = this.maxReconnects;
 
-	// Now msg to IRC
-	if (this.oldResult != null) { // Do not report on startup
-	    String old = getNext(oldResult);
-	    String cur = getNext(res);
-	    String channel = config.getProperty("channel");
-	    
-	    while (!(lastStr.equals(old) && lastStr.equals(cur))) {
-		int diff = old.compareTo(cur);
-
-		if (diff < 0) {
-		    // Leave of 'old'
-		    sendMessage(channel, "Lähti: "+old);
-		    old = getNext(oldResult);
-		} else if (diff > 0) {
-		    // Join of 'cur'
-		    sendMessage(channel, "Saapui: "+cur);
-		    cur = getNext(res);
-		} else {
-		    // If still present, report nothing but debug.
-		    sendMessage(channel, "Paikalla vielä: "+cur);
-		}
-	    }
+	// Read current visitors
+	Set<String> curVisitors = new TreeSet<String>();
+	while (res.next()) {
+	    curVisitors.add(res.getString(1));
 	}
+	
+	// Joins: difference
+	Set<String> joins = new TreeSet<String>(curVisitors);
+	joins.removeAll(oldVisitors);
 
-	res.beforeFirst(); // roll to start
-	this.oldResult = res;
+	// Leaves:
+	Set<String> leaves = new TreeSet<String>(oldVisitors);
+	leaves.removeAll(curVisitors);
+
+	// Now msg to IRC
+	String channel = config.getProperty("channel");
+	
+	String joinText = beautifulOut(joins,
+				       "Kattilaan saapui ",
+				       "Kattilaan saapuivat ");
+	String leaveText = beautifulOut(leaves,
+					"Kattilasta lähti ",
+					"Kattilasta lähtivät ");
+	
+	String extraText = "";
+	if (curVisitors.size() == 0) extraText = " Kattila on nyt tyhjä.";
+
+	if (joinText != null) sendMessage(channel, joinText);
+	if (leaveText != null) sendMessage(channel, leaveText + extraText);
+	
+	this.oldVisitors = curVisitors;
     }
     
-    public static String getNext(ResultSet res) throws SQLException {
-	if (!res.next()) return lastStr;
-	return res.getString(1);
+    /**
+     * Formats string to be a beautiful list in Finnish language.
+     * @param set A set of nicks
+     * @returns A human friendly string.
+     */
+    public static String beautifulOut(Set<String> set, String singular, String plural) {
+	StringBuilder sb = new StringBuilder();
+	int left = set.size();
+
+	if (left == 0 ) return null;
+	if (left == 1 ) sb = new StringBuilder(singular);
+	else sb = new StringBuilder(plural);
+
+	for (String nick : set) {
+	    sb.append(nick);
+	    left--;
+
+	    if (left > 1) sb.append(", ");
+	    else if (left == 1) sb.append(" ja ");
+	    else sb.append(".");
+	}
+	
+	return sb.toString();
     }
 
     public static void main(String[] args) throws Exception {
