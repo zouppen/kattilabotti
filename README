@@ -6,8 +6,17 @@ $ emacs bot.conf   # or vim, nano, ...
 Link (or copy) mysql-connector and pircbot to the directory where
 KattilaBot is in (adapt the following to your directory structure):
 
-$ ln -s /usr/share/java/mysql-connector-java-5.1.6-jar mysql-connect-java.jar
+$ ln -s /usr/share/java/mysql-connector-java.jar mysql-connector-java.jar
 $ ln -s ~/sorsat/pircbot/pircbot.jar pircbot.jar
+
+To compile KattilaBot, you need CLASSPATH entry. The following should work in Bash: 
+
+$ export CLASSPATH=.:mysql-connector-java.jar:pircbot.jar
+$ javac *.java
+
+Unix signalling requires "Oracle specific" sun.misc.Signal
+package. Using it produces warning. You can safely ignore them or send
+me a patch to get rid of using proprietary APIs.
 
 Then you can start KattilaBot.
 
@@ -27,3 +36,32 @@ $ KILL -USR2 pid_of_kattilabot
 
 My set-up is to run KattilaBot in user www-data and use PHP to send a
 signal to KattilaBot.
+
+Simulation
+==========
+
+You can try simulating with historical data. It's useful in debugging
+and development. In those late hours of day there may not be anyone in
+the place you are monitoring. So we just move the clock! Put the
+following to irc.conf to report happenings 8 hours ago:
+
+history_hours=8
+
+If history_hours is undefined or zero, we are using real-time data.
+
+License
+=======
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or (at
+your option) any later version.
+
+This program is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program, in file called LICENSE. For more information,
+see <http://www.gnu.org/licenses/>.

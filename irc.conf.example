@@ -2,3 +2,4 @@ nick=KattilaBot
 server=irc.jyu.fi
 channel=#bugbug
 site_id=1
+#history_hours=3

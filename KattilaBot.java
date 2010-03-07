@@ -9,11 +9,11 @@ public class KattilaBot extends PircBot {
     
     private static final String configFile = "irc.conf";
     private static final int maxReconnects = 3;
-    private static final String lastStr = "zzzzzzzz";
-    private static final String sqlQuery =
-	"select nick from visitor_public as v, device_public as d where d.id=v.id and jointime < date_sub(utc_timestamp(), interval 9 hour) and leavetime > date_sub(utc_timestamp(), interval 9 hour) and site=? order by nick;";
-
-    // when not simulating: select * from visitor_public as v, device_public as d where d.id=v.id and leavetime is null and site=1 order by nick;
+    private static final String sqlQuerySimulation =
+	"select nick from visitor_public as v, device_public as d where d.id=v.id and site=? and jointime < date_sub(utc_timestamp(), interval ? hour) and leavetime > date_sub(utc_timestamp(), interval ? hour) order by nick;";
+    
+    private static final String sqlQueryReal =
+	"select * from visitor_public as v, device_public as d where d.id=v.id and leavetime is null and site=? order by nick";
 
     private Properties config = new Properties(); 
     private int reconnectsLeft = maxReconnects;
@@ -58,8 +58,21 @@ public class KattilaBot extends PircBot {
 		this.dbTool = new DatabaseTool();
 		System.err.println("Got a new connection to the database.");
 
-		this.query = dbTool.prepareStatement(sqlQuery);
-		this.query.setInt(1,Integer.parseInt(config.getProperty("site_id")));
+		int history_hours =
+		    Integer.parseInt(config.getProperty("history_hours","0"));
+		
+		if (history_hours == 0) {
+		    // Real time data
+		    this.query = dbTool.prepareStatement(sqlQueryReal);
+		    this.query.setInt(1,Integer.parseInt(config.getProperty("site_id")));
+		} else {
+		    // Historical data
+		    System.err.println("Back in time for "+history_hours+" hours.");
+		    this.query = dbTool.prepareStatement(sqlQuerySimulation);
+		    this.query.setInt(1,Integer.parseInt(config.getProperty("site_id")));
+		    this.query.setInt(2,history_hours);
+		    this.query.setInt(3,history_hours);
+		}
 	    }
 	    
 	    // Bind fresh params if needed...
