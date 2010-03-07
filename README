@@ -1,0 +1,8 @@
+How to run
+
+$ cp bot.conf.example bot.conf
+$ emacs bot.conf   # or vim, nano, ...
+
+Set classpath to point the directory where PircBot is in:
+
+$ export CLASSPATH=.:/usr/share/java/mysql-connector-java-5.1.6.jar:~/sorsat/pircbot/pircbot.jar
