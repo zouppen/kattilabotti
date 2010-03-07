@@ -13,7 +13,7 @@ public class KattilaBot extends PircBot {
 	"select nick from visitor_public as v, device_public as d where d.id=v.id and site=? and jointime < date_sub(utc_timestamp(), interval ? hour) and leavetime > date_sub(utc_timestamp(), interval ? hour) order by nick;";
     
     private static final String sqlQueryReal =
-	"select * from visitor_public as v, device_public as d where d.id=v.id and leavetime is null and site=? order by nick";
+	"select nick from visitor_public as v, device_public as d where d.id=v.id and leavetime is null and site=? order by nick";
 
     private Properties config = new Properties(); 
     private int reconnectsLeft = maxReconnects;
