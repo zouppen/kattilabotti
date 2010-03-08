@@ -19,8 +19,9 @@ public class KattilaBot extends PircBot {
     private int reconnectsLeft = maxReconnects;
     private DatabaseTool dbTool = null;
     private PreparedStatement query;
-
-    private Set<String> oldVisitors = new TreeSet<String>();
+    
+    private Set<String> visitorsOld1 = new TreeSet<String>(); //  5 min ago
+    private Set<String> visitorsOld2 = new TreeSet<String>(); // 10 min ago
     
     public KattilaBot() throws Exception {
 	
@@ -29,8 +30,8 @@ public class KattilaBot extends PircBot {
 
         this.setName(config.getProperty("nick"));
 
-        // Enable debugging output.
-        this.setVerbose(true);
+        // Disable debugging output. Otherwise it prints all msgs to stdout.
+        this.setVerbose(false);
         
         // Open connection to IRC
         this.connect(config.getProperty("server"));
@@ -95,12 +96,15 @@ public class KattilaBot extends PircBot {
 	    curVisitors.add(res.getString(1));
 	}
 	
-	// Joins: difference
+	// Joins: cur \ (old1 ∪ old2) = cur \ old1 \ old2
 	Set<String> joins = new TreeSet<String>(curVisitors);
-	joins.removeAll(oldVisitors);
-
-	// Leaves:
-	Set<String> leaves = new TreeSet<String>(oldVisitors);
+	joins.removeAll(visitorsOld1);
+	joins.removeAll(visitorsOld2);
+	
+	// Leaves: old2 \ old1 \ cur
+	// before it's recorded as a leave, one must be out of range two times.
+	Set<String> leaves = new TreeSet<String>(visitorsOld2);
+	leaves.removeAll(visitorsOld1);
 	leaves.removeAll(curVisitors);
 
 	// Now msg to IRC
@@ -119,7 +123,9 @@ public class KattilaBot extends PircBot {
 	if (joinText != null) sendNotice(channel, joinText);
 	if (leaveText != null) sendNotice(channel, leaveText + extraText);
 	
-	this.oldVisitors = curVisitors;
+	// Pushing old visitor list down
+	this.visitorsOld2 = visitorsOld1;
+	this.visitorsOld1 = curVisitors;
     }
     
     /**
