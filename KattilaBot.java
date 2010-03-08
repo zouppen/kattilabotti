@@ -116,8 +116,8 @@ public class KattilaBot extends PircBot {
 	String extraText = "";
 	if (curVisitors.size() == 0) extraText = " Kattila on nyt tyhjä.";
 
-	if (joinText != null) sendMessage(channel, joinText);
-	if (leaveText != null) sendMessage(channel, leaveText + extraText);
+	if (joinText != null) sendNotice(channel, joinText);
+	if (leaveText != null) sendNotice(channel, leaveText + extraText);
 	
 	this.oldVisitors = curVisitors;
     }
