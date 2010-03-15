@@ -1,0 +1,4 @@
+*.class
+/database.conf
+/irc.conf
+/kattilabot.pid

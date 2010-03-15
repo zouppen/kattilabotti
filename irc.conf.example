@@ -3,3 +3,6 @@ server=irc.jyu.fi
 channel=#bugbug
 site_id=1
 #history_hours=3
+#notice=true
+topic=1
+topic_text="Kattilassa nyt: "
