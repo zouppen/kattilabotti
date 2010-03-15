@@ -22,7 +22,8 @@ public class KattilaBot extends PircBot {
     private DatabaseTool dbTool = null;
     private PreparedStatement query;
     private List<Handler> handlers = new ArrayList<Handler>();
-    
+    private Set<String> visitors = new TreeSet<String>();
+        
     public KattilaBot() throws Exception {
 	
 	// Reading the settings
@@ -49,12 +50,11 @@ public class KattilaBot extends PircBot {
         // check() periodically.
         ProgressSignalHandler.install(this);
     }
-    
+
     /**
-     * This method is called when we have received a signal from the
-     * database replicator and we have new data.
-     */
-    public void check() throws Exception {
+     * This updates this.visitors from the database.
+     */ 
+    private void updateVisitors() throws Exception {
 	ResultSet res;
 	int site = Integer.parseInt(config.getProperty("site_id"));
 	
@@ -105,10 +105,24 @@ public class KattilaBot extends PircBot {
 	while (res.next()) {
 	    curVisitors.add(res.getString(1));
 	}
+
+	this.visitors = curVisitors;
+    }
+
+
+    /**
+     * This method is called when we have received a signal from the
+     * database replicator and we have new data.
+     */
+    public void check() throws Exception {
+	int site = Integer.parseInt(config.getProperty("site_id"));	
+
+	// Read the database
+	updateVisitors();
 	
 	// Calls visitor handler
 	for (Handler h: handlers) {
-	    h.newData(site,curVisitors);
+	    h.newData(site,this.visitors);
 	}
     }
     
