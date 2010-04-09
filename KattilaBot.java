@@ -111,11 +111,11 @@ public class KattilaBot extends PircBot {
 	String channel = config.getProperty("channel");
 	
 	String joinText = beautifulOut(joins,
-				       "Kattilaan saapui ",
-				       "Kattilaan saapuivat ");
+				       config.getProperty("join_s")+" ",
+				       config.getProperty("join_p")+" ");
 	String leaveText = beautifulOut(leaves,
-					"Kattilasta lähti ",
-					"Kattilasta lähtivät ");
+					config.getProperty("leave_s")+" ",
+					config.getProperty("leave_p")+" ");
 	
 	String extraText = "";
 	if (curVisitors.size() == 0) extraText = " Kattila on nyt tyhjä.";

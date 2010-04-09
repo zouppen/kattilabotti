@@ -3,3 +3,7 @@ server=irc.jyu.fi
 channel=#bugbug
 site_id=1
 #history_hours=3
+join_s=Kattilaan saapui
+join_p=Kattilaan saapuivat
+leave_s=Kattilasta lähti
+leave_p=Kattilasta lähtivät
