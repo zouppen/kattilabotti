@@ -41,7 +41,7 @@ public class KattilaBot extends PircBot {
 	// Adds handlers for incoming data
 	if ("true".equals(this.config.getProperty("notice"))) {
 	    System.err.println("Using notices.");
-	    handlers.add(new NoticeHandler(this, config.getProperty("channel")));
+	    handlers.add(new NoticeHandler(this,config.getProperty("channel"),config));
 	}
 
 	// Puts in a signal handler which alerts about new data in the

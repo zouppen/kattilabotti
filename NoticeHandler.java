@@ -1,6 +1,7 @@
 import java.util.Set;
 import java.util.TreeSet;
 import org.jibble.pircbot.*;
+import java.util.Properties;
 
 /**
  * Class for sending notices to a channel . Ideally, this
@@ -12,14 +13,16 @@ public class NoticeHandler extends Handler {
     
     private Set<String> visitorsOld1 = new TreeSet<String>(); //  5 min ago
     private Set<String> visitorsOld2 = new TreeSet<String>(); // 10 min ago
+    private Properties config;
 
     /**
      * Constructor.
      * @param bot The bot this thing should interact with.
      * @param channel The channel to talk to.
      */
-    public NoticeHandler(PircBot bot, String channel) {
+    public NoticeHandler(PircBot bot, String channel,Properties config) {
 	super(bot,channel);
+	this.config = config;
     }
 
     /**
@@ -37,14 +40,6 @@ public class NoticeHandler extends Handler {
 	Set<String> leaves = new TreeSet<String>(visitorsOld2);
 	leaves.removeAll(visitorsOld1);
 	leaves.removeAll(curVisitors);
-
-	String joinText = beautifulOut(joins,
-				       config.getProperty("join_s")+" ",
-				       config.getProperty("join_p")+" ");
-	String leaveText = beautifulOut(leaves,
-					config.getProperty("leave_s")+" ",
-					config.getProperty("leave_p")+" ");
-
 
 	// Now msg to IRC
 	String joinText = KattilaBot.toHumanList(joins,

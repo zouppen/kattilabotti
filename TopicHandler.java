@@ -8,7 +8,7 @@ import org.jibble.pircbot.*;
  * topic etc.
  */
 
-public class NoticeHandler extends Handler {
+public class TopicHandler extends Handler {
     
     // Topic head, nick list and tail.
     private String topicHead, topicList, topicTail; 
@@ -24,7 +24,7 @@ public class NoticeHandler extends Handler {
      * @param bot The bot this thing should interact with.
      * @param channel The channel to talk to.
      */
-    public NoticeHandler(PircBot bot, String channel, String heading) {
+    public TopicHandler(PircBot bot, String channel, String heading) {
 	super(bot,channel);
 	this.heading = heading;
 
