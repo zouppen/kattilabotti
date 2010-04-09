@@ -38,16 +38,24 @@ public class NoticeHandler extends Handler {
 	leaves.removeAll(visitorsOld1);
 	leaves.removeAll(curVisitors);
 
+	String joinText = beautifulOut(joins,
+				       config.getProperty("join_s")+" ",
+				       config.getProperty("join_p")+" ");
+	String leaveText = beautifulOut(leaves,
+					config.getProperty("leave_s")+" ",
+					config.getProperty("leave_p")+" ");
+
+
 	// Now msg to IRC
 	String joinText = KattilaBot.toHumanList(joins,
-						 "Kattilaan saapui ",
-						 "Kattilaan saapuivat ");
+						 config.getProperty("join_s")+" ",
+						 config.getProperty("join_p")+" ");
 	String leaveText = KattilaBot.toHumanList(leaves,
-						  "Kattilasta lähti ",
-						  "Kattilasta lähtivät ");
+						  config.getProperty("leave_s")+" ",
+						  config.getProperty("leave_p")+" ");
 	
 	String extraText = "";
-	if (curVisitors.size() == 0) extraText = " Kattila on nyt tyhjä.";
+	if (curVisitors.size() == 0) extraText = " "+config.getProperty("empty");
 
 	if (joinText != null) bot.sendNotice(this.channel, joinText);
 	if (leaveText != null) bot.sendNotice(this.channel, leaveText + extraText);
