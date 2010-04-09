@@ -2,6 +2,8 @@ import java.io.*;
 import java.util.Properties;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.List;
+import java.util.ArrayList;
 import org.jibble.pircbot.*;
 import java.sql.*;
 
@@ -19,10 +21,9 @@ public class KattilaBot extends PircBot {
     private int reconnectsLeft = maxReconnects;
     private DatabaseTool dbTool = null;
     private PreparedStatement query;
-    
-    private Set<String> visitorsOld1 = new TreeSet<String>(); //  5 min ago
-    private Set<String> visitorsOld2 = new TreeSet<String>(); // 10 min ago
-    
+    private List<Handler> handlers = new ArrayList<Handler>();
+    private Set<String> visitors = new TreeSet<String>();
+        
     public KattilaBot() throws Exception {
 	
 	// Reading the settings
@@ -37,16 +38,25 @@ public class KattilaBot extends PircBot {
         this.connect(config.getProperty("server"));
 	this.joinChannel(config.getProperty("channel"));
 	
+	// Adds handlers for incoming data
+	if ("true".equals(this.config.getProperty("notice"))) {
+	    System.err.println("Using notices.");
+	    handlers.add(new NoticeHandler(this, config.getProperty("channel")));
+	}
+
 	// Puts in a signal handler which alerts about new data in the
         // database. This uses Oracle's Java extension which may not
         // be a part of your JRE. If so, implement a timer which runs
         // check() periodically.
         ProgressSignalHandler.install(this);
-
     }
-    
-    public void check() throws Exception {
+
+    /**
+     * This updates this.visitors from the database.
+     */ 
+    private void updateVisitors() throws Exception {
 	ResultSet res;
+	int site = Integer.parseInt(config.getProperty("site_id"));
 	
 	if (this.reconnectsLeft == 0) {
 	    System.err.println("No more reconnects!");
@@ -65,12 +75,12 @@ public class KattilaBot extends PircBot {
 		if (history_hours == 0) {
 		    // Real time data
 		    this.query = dbTool.prepareStatement(sqlQueryReal);
-		    this.query.setInt(1,Integer.parseInt(config.getProperty("site_id")));
+		    this.query.setInt(1,site);
 		} else {
 		    // Historical data
 		    System.err.println("Back in time for "+history_hours+" hours.");
 		    this.query = dbTool.prepareStatement(sqlQuerySimulation);
-		    this.query.setInt(1,Integer.parseInt(config.getProperty("site_id")));
+		    this.query.setInt(1,site);
 		    this.query.setInt(2,history_hours);
 		    this.query.setInt(3,history_hours);
 		}
@@ -95,37 +105,25 @@ public class KattilaBot extends PircBot {
 	while (res.next()) {
 	    curVisitors.add(res.getString(1));
 	}
-	
-	// Joins: cur \ (old1 ∪ old2) = cur \ old1 \ old2
-	Set<String> joins = new TreeSet<String>(curVisitors);
-	joins.removeAll(visitorsOld1);
-	joins.removeAll(visitorsOld2);
-	
-	// Leaves: old2 \ old1 \ cur
-	// before it's recorded as a leave, one must be out of range two times.
-	Set<String> leaves = new TreeSet<String>(visitorsOld2);
-	leaves.removeAll(visitorsOld1);
-	leaves.removeAll(curVisitors);
 
-	// Now msg to IRC
-	String channel = config.getProperty("channel");
-	
-	String joinText = beautifulOut(joins,
-				       config.getProperty("join_s")+" ",
-				       config.getProperty("join_p")+" ");
-	String leaveText = beautifulOut(leaves,
-					config.getProperty("leave_s")+" ",
-					config.getProperty("leave_p")+" ");
-	
-	String extraText = "";
-	if (curVisitors.size() == 0) extraText = " Kattila on nyt tyhjä.";
+	this.visitors = curVisitors;
+    }
 
-	if (joinText != null) sendNotice(channel, joinText);
-	if (leaveText != null) sendNotice(channel, leaveText + extraText);
+
+    /**
+     * This method is called when we have received a signal from the
+     * database replicator and we have new data.
+     */
+    public void check() throws Exception {
+	int site = Integer.parseInt(config.getProperty("site_id"));	
+
+	// Read the database
+	updateVisitors();
 	
-	// Pushing old visitor list down
-	this.visitorsOld2 = visitorsOld1;
-	this.visitorsOld1 = curVisitors;
+	// Calls visitor handler
+	for (Handler h: handlers) {
+	    h.newData(site,this.visitors);
+	}
     }
     
     /**
@@ -133,7 +131,7 @@ public class KattilaBot extends PircBot {
      * @param set A set of nicks
      * @returns A human friendly string.
      */
-    public static String beautifulOut(Set<String> set, String singular, String plural) {
+    public static String toHumanList(Set<String> set, String singular, String plural) {
 	StringBuilder sb = new StringBuilder();
 	int left = set.size();
 

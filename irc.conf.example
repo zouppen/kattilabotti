@@ -7,3 +7,7 @@ join_s=Kattilaan saapui
 join_p=Kattilaan saapuivat
 leave_s=Kattilasta lähti
 leave_p=Kattilasta lähtivät
+empty=Kattila on nyt tyhjä.
+#notice=true
+topic=1
+topic_text="Kattilassa nyt: "
